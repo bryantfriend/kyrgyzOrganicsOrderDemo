@@ -6,6 +6,9 @@
     <title>Kyrgyz Organic - Order Form</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jsPDF Libraries for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
         html {
             scroll-behavior: smooth;
@@ -111,14 +114,31 @@
         </div>
     </div>
 
-    <!-- Order Confirmation Modal (Shared) -->
+    <!-- Order Confirmation & Customer Info Modal -->
     <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-transform duration-300 scale-95">
-            <h2 class="text-2xl font-bold mb-4">Order Confirmation</h2>
-            <p class="text-gray-600 mb-6">Your order is ready. Please review the details below.</p>
-            <div id="modal-order-summary" class="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto mb-6"></div>
-            <div class="text-right font-bold text-xl mb-6">Total: <span id="modal-total-price"></span></div>
-            <button id="close-modal-btn" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700">Close</button>
+            <h2 class="text-2xl font-bold mb-4">Finalize Order</h2>
+            <p class="text-gray-600 mb-6">Please enter customer details to generate the invoice.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="customer-name" class="block text-sm font-medium text-gray-700">Company Purchasing</label>
+                    <input type="text" id="customer-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="e.g., Bishkek Cafe">
+                </div>
+                <div>
+                    <label for="customer-address" class="block text-sm font-medium text-gray-700">Company Address</label>
+                    <input type="text" id="customer-address" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="e.g., 123 Chuy Avenue, Bishkek">
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <button id="generate-invoice-btn" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                    Generate Invoice & Send via WhatsApp
+                </button>
+                <button id="close-modal-btn" class="mt-2 w-full text-center text-gray-600 py-2 rounded-lg hover:bg-gray-100">
+                    Cancel
+                </button>
+            </div>
         </div>
     </div>
 
@@ -204,8 +224,9 @@
 
         const orderModal = document.getElementById('order-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
-        const modalOrderSummary = document.getElementById('modal-order-summary');
-        const modalTotalPrice = document.getElementById('modal-total-price');
+        const generateInvoiceBtn = document.getElementById('generate-invoice-btn');
+        const customerNameInput = document.getElementById('customer-name');
+        const customerAddressInput = document.getElementById('customer-address');
 
         // --- RENDER FUNCTIONS ---
 
@@ -217,7 +238,6 @@
                 const categoryData = productData[category];
                 const categoryId = category.replace(/\s+/g, '-').toLowerCase();
 
-                // Create Nav Link
                 const navLink = document.createElement('a');
                 navLink.href = `#${categoryId}`;
                 navLink.className = 'block py-2 px-4 rounded-md hover:bg-gray-100';
@@ -225,12 +245,10 @@
                 navLink.onclick = () => closeNavMenu();
                 mobileNavLinks.appendChild(navLink);
 
-                // Create Category Section
                 const categorySection = document.createElement('section');
                 categorySection.id = categoryId;
                 categorySection.className = 'mb-12';
                 
-                // Hero for category
                 categorySection.innerHTML = `
                     <div class="hero-bg rounded-2xl h-56 md:h-72 mb-8 relative flex items-center justify-center text-white overflow-hidden" style="background-image: url('${categoryData.heroImage}')">
                         <div class="absolute inset-0 bg-black/50"></div>
@@ -286,7 +304,6 @@
             let itemCount = 0;
             const cartIsEmpty = Object.keys(cart).length === 0;
 
-            // Common logic for creating cart item elements
             const createCartItemElement = (item, cartItemId) => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0';
@@ -304,7 +321,6 @@
                 return itemDiv;
             };
 
-            // Clear both carts
             desktopCartItems.innerHTML = '';
             mobileCartItems.innerHTML = '';
             
@@ -353,12 +369,12 @@
             if (!product || quantity < 1) return;
 
             const selectedOption = product.options[selectedOptionIndex];
-            const cartItemId = `${productId}-${selectedOptionIndex}`;
+            const cartItemId = `${product.id}-${selectedOptionIndex}`;
 
             if (cart[cartItemId]) {
                 cart[cartItemId].quantity += quantity;
             } else {
-                cart[cartItemId] = { name: product.name, weight: selectedOption.weight, price: selectedOption.price, quantity: quantity };
+                cart[cartItemId] = { id: product.id, name: product.name, weight: selectedOption.weight, price: selectedOption.price, quantity: quantity };
             }
             
             renderCart();
@@ -373,17 +389,6 @@
         }
         
         function showOrderModal() {
-            modalOrderSummary.innerHTML = '';
-            let total = 0;
-            for (const cartItemId in cart) {
-                const item = cart[cartItemId];
-                const itemSummaryDiv = document.createElement('div');
-                itemSummaryDiv.className = 'flex justify-between py-2';
-                itemSummaryDiv.innerHTML = `<span>${item.quantity} x ${item.name} (${item.weight})</span><span class="font-medium">${item.quantity * item.price} сом</span>`;
-                modalOrderSummary.appendChild(itemSummaryDiv);
-                total += item.quantity * item.price;
-            }
-            modalTotalPrice.textContent = `${total} сом`;
             orderModal.classList.remove('hidden');
             setTimeout(() => orderModal.querySelector('div').classList.remove('scale-95'), 10);
         }
@@ -391,6 +396,102 @@
         function hideOrderModal() {
              orderModal.querySelector('div').classList.add('scale-95');
              setTimeout(() => orderModal.classList.add('hidden'), 300);
+        }
+
+        function generatePDFInvoice() {
+            const customerName = customerNameInput.value.trim();
+            const customerAddress = customerAddressInput.value.trim();
+
+            if (!customerName || !customerAddress) {
+                alert('Please fill in all customer details.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // --- Invoice Header ---
+            const invoiceId = `INV-${Date.now()}`;
+            const invoiceDate = new Date().toLocaleDateString('en-GB');
+            
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Invoice', 14, 22);
+
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Invoice ID: ${invoiceId}`, 14, 30);
+            doc.text(`Date: ${invoiceDate}`, 14, 35);
+            
+            doc.text('From: OA Kyrgyz Organic', 130, 30);
+            doc.text('Bishkek, Kyrgyzstan', 130, 35);
+
+            // --- Customer Info ---
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Bill To:', 14, 50);
+            doc.setFont('helvetica', 'normal');
+            doc.text(customerName, 14, 56);
+            doc.text(customerAddress, 14, 62);
+
+            // --- Invoice Table ---
+            const tableColumn = ["Item No.", "Product No.", "Item Name", "Qty", "Price", "Total"];
+            const tableRows = [];
+            let grandTotal = 0;
+            let itemCounter = 1;
+
+            for (const key in cart) {
+                const item = cart[key];
+                const total = item.price * item.quantity;
+                const rowData = [
+                    itemCounter,
+                    item.id,
+                    `${item.name} (${item.weight})`,
+                    item.quantity,
+                    `${item.price} сом`,
+                    `${total} сом`
+                ];
+                tableRows.push(rowData);
+                grandTotal += total;
+                itemCounter++;
+            }
+
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 75,
+                theme: 'striped',
+                headStyles: { fillColor: [34, 139, 34] } // Green header
+            });
+            
+            // --- Total ---
+            const finalY = doc.lastAutoTable.finalY;
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Total: ${grandTotal} сом`, 14, finalY + 15);
+
+            // --- Signatures ---
+            doc.setLineWidth(0.5);
+            doc.line(14, finalY + 40, 80, finalY + 40);
+            doc.line(130, finalY + 40, 196, finalY + 40);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Supplier Signature', 30, finalY + 45);
+            doc.text('Customer Signature', 145, finalY + 45);
+
+            // --- Save PDF and trigger WhatsApp ---
+            doc.save(`Invoice-${invoiceId}.pdf`);
+
+            const whatsappNumber = "+996997995523"; // From catalog
+            const message = encodeURIComponent(`Hello! I would like to place an order for ${customerName}. The total is ${grandTotal} сом. Please find the invoice attached.`);
+            window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+            
+            // --- Reset ---
+            hideOrderModal();
+            cart = {};
+            renderCart();
+            customerNameInput.value = '';
+            customerAddressInput.value = '';
         }
 
         function openNavMenu() {
@@ -430,7 +531,7 @@
         });
         
         closeModalBtn.addEventListener('click', hideOrderModal);
-        orderModal.addEventListener('click', (e) => e.target === orderModal && hideOrderModal());
+        generateInvoiceBtn.addEventListener('click', generatePDFInvoice);
 
         menuBtn.addEventListener('click', openNavMenu);
         navOverlay.addEventListener('click', closeNavMenu);
