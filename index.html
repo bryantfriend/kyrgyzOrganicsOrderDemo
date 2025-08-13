@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kyrgyz Organic - Order Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .nav-menu {
+            transition: transform 0.3s ease-in-out;
+        }
+        .hero-bg {
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header with Hamburger Menu -->
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-40 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center h-16">
+            <h1 class="text-xl font-bold text-green-700">OA Kyrgyz Organic</h1>
+            <button id="menu-btn" class="p-2 lg:hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navigation Menu (for Mobile) -->
+    <div id="nav-menu" class="nav-menu fixed top-0 left-0 w-64 h-full bg-white shadow-lg z-50 transform -translate-x-full lg:hidden">
+        <div class="p-4 border-b">
+            <h2 class="font-bold text-lg">Categories</h2>
+        </div>
+        <nav id="mobile-nav-links" class="p-4">
+            <!-- Mobile nav links will be injected here -->
+        </nav>
+    </div>
+    <div id="nav-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <div class="container mx-auto p-4 md:p-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Products Section -->
+            <main id="products-section" class="w-full lg:w-2/3">
+                <!-- Categories will be injected here -->
+            </main>
+
+            <!-- Desktop Cart Section -->
+            <aside class="w-full lg:w-1/3 hidden lg:block">
+                <div class="sticky top-24 bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold border-b pb-4 mb-4">Your Order</h2>
+                    <div id="desktop-cart-items" class="mb-4 max-h-96 overflow-y-auto">
+                        <p class="text-gray-500">Your cart is empty.</p>
+                    </div>
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between items-center text-xl font-bold">
+                            <span>Total:</span>
+                            <span id="desktop-total-price">0 сом</span>
+                        </div>
+                        <button id="desktop-place-order-btn" class="mt-6 w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:bg-gray-400">
+                            Place Order
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Mobile Floating Cart Button -->
+    <div id="mobile-cart-button" class="lg:hidden fixed bottom-4 right-4 z-30">
+        <button class="bg-green-600 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span id="mobile-cart-count" class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">0</span>
+        </button>
+    </div>
+    
+    <!-- Mobile Cart Modal -->
+    <div id="mobile-cart-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center hidden z-50">
+        <div class="bg-white p-6 rounded-t-2xl shadow-2xl w-full transform transition-transform duration-300 translate-y-full">
+            <div class="flex justify-between items-center border-b pb-4 mb-4">
+                 <h2 class="text-2xl font-bold">Your Order</h2>
+                 <button id="close-mobile-cart-btn" class="text-2xl">&times;</button>
+            </div>
+            <div id="mobile-cart-items" class="mb-4 max-h-64 overflow-y-auto">
+                <p class="text-gray-500">Your cart is empty.</p>
+            </div>
+            <div class="border-t pt-4">
+                <div class="flex justify-between items-center text-xl font-bold">
+                    <span>Total:</span>
+                    <span id="mobile-total-price">0 сом</span>
+                </div>
+                <button id="mobile-place-order-btn" class="mt-6 w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:bg-gray-400">
+                    Place Order
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Confirmation Modal (Shared) -->
+    <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-transform duration-300 scale-95">
+            <h2 class="text-2xl font-bold mb-4">Order Confirmation</h2>
+            <p class="text-gray-600 mb-6">Your order is ready. Please review the details below.</p>
+            <div id="modal-order-summary" class="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto mb-6"></div>
+            <div class="text-right font-bold text-xl mb-6">Total: <span id="modal-total-price"></span></div>
+            <button id="close-modal-btn" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const productData = {
+            "Бездрожжевой Хлеб": {
+                description: "Натуральный хлеб, который выпекается без использования дрожжей на натуральной закваске. Свежий, вкусный и здоровый выбор для вашего стола.",
+                heroImage: "https://images.pexels.com/photos/209205/pexels-photo-209205.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+                items: [
+                    { id: 1, name: "Французский багет на закваске", image: "https://images.pexels.com/photos/1387070/pexels-photo-1387070.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "390 гр", price: 92 }] },
+                    { id: 2, name: "Кампань французский хлеб", image: "https://images.pexels.com/photos/1775043/pexels-photo-1775043.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "390 гр", price: 92 }] },
+                    { id: 3, name: "Хлеб с семенами льна и мака", image: "https://images.pexels.com/photos/209493/pexels-photo-209493.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "390 гр", price: 92 }] },
+                    { id: 4, name: "Хлеб нарезной с отрубями", image: "https://images.pexels.com/photos/8995735/pexels-photo-8995735.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "390 гр", price: 92 }] },
+                    { id: 5, name: "Ржаной хлеб на закваске", image: "https://images.pexels.com/photos/6627233/pexels-photo-6627233.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "390 гр", price: 92 }] },
+                    { id: 6, name: "Арабский хлеб (Пита 3в1)", image: "https://images.pexels.com/photos/8886515/pexels-photo-8886515.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "180 гр", price: 65 }] },
+                ]
+            },
+            "Медовая гранола": {
+                description: "Полезный и натуральный завтрак или перекус, обогащённый сладостью натурального мёда. Сочетает хрустящие овсяные хлопья с сухофруктами и орехами.",
+                heroImage: "https://images.pexels.com/photos/1640775/pexels-photo-1640775.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+                items: [
+                    { id: 7, name: "Ореховой Рай", image: "https://images.pexels.com/photos/376465/pexels-photo-376465.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "280 гр", price: 322 }, { weight: "500 гр", price: 472 }, { weight: "1000 гр", price: 881 }] },
+                    { id: 8, name: "Душистая Клубника", image: "https://images.pexels.com/photos/1092730/pexels-photo-1092730.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "350 гр", price: 269 }, { weight: "500 гр", price: 397 }, { weight: "1000 гр", price: 681 }] },
+                    { id: 9, name: "В Темном Шоколаде", image: "https://images.pexels.com/photos/4397775/pexels-photo-4397775.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "280 гр", price: 322 }, { weight: "500 гр", price: 472 }, { weight: "1000 гр", price: 881 }] },
+                    { id: 10, name: "Фруктовый Сад", image: "https://images.pexels.com/photos/1640775/pexels-photo-1640775.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "350 гр", price: 269 }, { weight: "500 гр", price: 397 }, { weight: "1000 гр", price: 681 }] },
+                    { id: 11, name: "Гранола Ассорти (в коробке)", image: "https://images.pexels.com/photos/7932339/pexels-photo-7932339.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "400 гр", price: 309 }] },
+                ]
+            },
+            "Итальянские Сладости": {
+                description: "Изысканные лакомства, вдохновленные традиционными рецептами Италии. Идеально сочетаются с кофе, какао и горячим чаем.",
+                heroImage: "https://images.pexels.com/photos/574111/pexels-photo-574111.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+                items: [
+                    { id: 16, name: "Бискотти Классический", image: "https://images.pexels.com/photos/574114/pexels-photo-574114.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "200 гр", price: 305 }, { weight: "500 гр", price: 595 }] },
+                    { id: 17, name: "Бискотти Шоколадный", image: "https://images.pexels.com/photos/1327429/pexels-photo-1327429.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "200 гр", price: 305 }, { weight: "500 гр", price: 595 }] },
+                    { id: 21, name: "Гриссини с семенами", image: "https://images.pexels.com/photos/6416557/pexels-photo-6416557.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "150 гр", price: 150 }] },
+                    { id: 22, name: "Гриссини с луком", image: "https://images.pexels.com/photos/6416557/pexels-photo-6416557.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "150 гр", price: 150 }] },
+                ]
+            },
+            "Натуральные печенья": {
+                description: "Нежное и вкусное угощение, приготовленное с использованием только органических ингредиентов и натурального сливочного масла.",
+                heroImage: "https://images.pexels.com/photos/2067396/pexels-photo-2067396.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+                items: [
+                    { id: 26, name: "Печенье Шоко-Моко", image: "https://images.pexels.com/photos/3642533/pexels-photo-3642533.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "200 гр", price: 217 }, { weight: "500 гр", price: 431 }] },
+                    { id: 27, name: "Печенье Сливочное-Мливочное", image: "https://images.pexels.com/photos/230325/pexels-photo-230325.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "200 гр", price: 217 }, { weight: "500 гр", price: 431 }] },
+                    { id: 28, name: "Печенье Зоопарк", image: "https://images.pexels.com/photos/6114143/pexels-photo-6114143.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "200 гр", price: 217 }, { weight: "500 гр", price: 431 }] },
+                    { id: 29, name: "Печенье американо (ореховый)", image: "https://images.pexels.com/photos/671239/pexels-photo-671239.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "60 гр", price: 74 }] },
+                ]
+            },
+            "Круассаны и Джелато": {
+                description: "Нежная выпечка и фирменное итальянское мороженое, приготовленные из натуральных ингредиентов с любовью.",
+                heroImage: "https://images.pexels.com/photos/2135/food-france-morning-breakfast.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+                items: [
+                    { id: 31, name: "Круассан классик", image: "https://images.pexels.com/photos/2135/food-france-morning-breakfast.jpg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "100 гр", price: 107 }] },
+                    { id: 34, name: "Круассан с темном шоколадом", image: "https://images.pexels.com/photos/3892469/pexels-photo-3892469.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "120 гр", price: 128 }] },
+                    { id: 36, name: "Gelato с фисташками", image: "https://images.pexels.com/photos/6061559/pexels-photo-6061559.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "800 гр", price: 1300 }] },
+                    { id: 37, name: "Gelato с шоколадом", image: "https://images.pexels.com/photos/1362534/pexels-photo-1362534.jpeg?auto=compress&cs=tinysrgb&w=600", options: [{ weight: "800 гр", price: 1300 }] },
+                ]
+            }
+        };
+
+        // --- STATE ---
+        let cart = {};
+
+        // --- DOM ELEMENTS ---
+        const productsSection = document.getElementById('products-section');
+        const mobileNavLinks = document.getElementById('mobile-nav-links');
+        const menuBtn = document.getElementById('menu-btn');
+        const navMenu = document.getElementById('nav-menu');
+        const navOverlay = document.getElementById('nav-overlay');
+        
+        const desktopCartItems = document.getElementById('desktop-cart-items');
+        const desktopTotalPriceEl = document.getElementById('desktop-total-price');
+        const desktopPlaceOrderBtn = document.getElementById('desktop-place-order-btn');
+
+        const mobileCartButton = document.getElementById('mobile-cart-button');
+        const mobileCartCount = document.getElementById('mobile-cart-count');
+        const mobileCartModal = document.getElementById('mobile-cart-modal');
+        const closeMobileCartBtn = document.getElementById('close-mobile-cart-btn');
+        const mobileCartItems = document.getElementById('mobile-cart-items');
+        const mobileTotalPriceEl = document.getElementById('mobile-total-price');
+        const mobilePlaceOrderBtn = document.getElementById('mobile-place-order-btn');
+
+        const orderModal = document.getElementById('order-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalOrderSummary = document.getElementById('modal-order-summary');
+        const modalTotalPrice = document.getElementById('modal-total-price');
+
+        // --- RENDER FUNCTIONS ---
+
+        function renderProductsAndNav() {
+            productsSection.innerHTML = '';
+            mobileNavLinks.innerHTML = '';
+
+            for (const category in productData) {
+                const categoryData = productData[category];
+                const categoryId = category.replace(/\s+/g, '-').toLowerCase();
+
+                // Create Nav Link
+                const navLink = document.createElement('a');
+                navLink.href = `#${categoryId}`;
+                navLink.className = 'block py-2 px-4 rounded-md hover:bg-gray-100';
+                navLink.textContent = category;
+                navLink.onclick = () => closeNavMenu();
+                mobileNavLinks.appendChild(navLink);
+
+                // Create Category Section
+                const categorySection = document.createElement('section');
+                categorySection.id = categoryId;
+                categorySection.className = 'mb-12';
+                
+                // Hero for category
+                categorySection.innerHTML = `
+                    <div class="hero-bg rounded-2xl h-56 md:h-72 mb-8 relative flex items-center justify-center text-white overflow-hidden" style="background-image: url('${categoryData.heroImage}')">
+                        <div class="absolute inset-0 bg-black/50"></div>
+                        <div class="relative text-center p-4">
+                            <h2 class="text-3xl md:text-5xl font-bold">${category}</h2>
+                            <p class="mt-2 max-w-2xl">${categoryData.description}</p>
+                        </div>
+                    </div>
+                `;
+                
+                const productsGrid = document.createElement('div');
+                productsGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-6';
+                
+                categoryData.items.forEach(product => {
+                    productsGrid.appendChild(createProductCard(product));
+                });
+
+                categorySection.appendChild(productsGrid);
+                productsSection.appendChild(categorySection);
+            }
+        }
+
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'product-card bg-white rounded-2xl shadow-md flex flex-col overflow-hidden transition-all duration-300';
+            
+            const optionsHTML = product.options.map((opt, index) => 
+                `<option value="${index}">${opt.weight} - ${opt.price} сом</option>`
+            ).join('');
+
+            card.innerHTML = `
+                <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/f3f4f6/9ca3af?text=Image+Unavailable';">
+                <div class="p-5 flex flex-col flex-grow">
+                    <h3 class="font-bold text-lg flex-grow">${product.name}</h3>
+                    <div class="mt-4">
+                        <div class="flex flex-col sm:flex-row gap-2 items-center">
+                            <select data-product-id="${product.id}" class="size-select w-full sm:w-1/2 p-2 border rounded-md bg-gray-50 focus:ring-2 focus:ring-green-500">
+                                ${optionsHTML}
+                            </select>
+                            <input type="number" data-product-id="${product.id}" class="quantity-input w-full sm:w-1/2 p-2 border rounded-md text-center focus:ring-2 focus:ring-green-500" value="1" min="1">
+                        </div>
+                        <button data-product-id="${product.id}" class="add-to-cart-btn mt-4 w-full bg-green-100 text-green-800 font-semibold py-2 rounded-lg hover:bg-green-200 transition-colors">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function renderCart() {
+            let total = 0;
+            let itemCount = 0;
+            const cartIsEmpty = Object.keys(cart).length === 0;
+
+            // Common logic for creating cart item elements
+            const createCartItemElement = (item, cartItemId) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0';
+                itemDiv.innerHTML = `
+                    <div class="flex-grow pr-2">
+                        <p class="font-semibold">${item.name}</p>
+                        <p class="text-sm text-gray-500">${item.weight}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-semibold">${item.quantity * item.price} сом</p>
+                        <p class="text-sm text-gray-500">Qty: ${item.quantity}</p>
+                    </div>
+                    <button data-cart-item-id="${cartItemId}" class="remove-from-cart-btn ml-4 text-red-500 hover:text-red-700 text-2xl font-bold">&times;</button>
+                `;
+                return itemDiv;
+            };
+
+            // Clear both carts
+            desktopCartItems.innerHTML = '';
+            mobileCartItems.innerHTML = '';
+            
+            if (cartIsEmpty) {
+                desktopCartItems.innerHTML = '<p class="text-gray-500">Your cart is empty.</p>';
+                mobileCartItems.innerHTML = '<p class="text-gray-500">Your cart is empty.</p>';
+                desktopPlaceOrderBtn.disabled = true;
+                mobilePlaceOrderBtn.disabled = true;
+            } else {
+                desktopPlaceOrderBtn.disabled = false;
+                mobilePlaceOrderBtn.disabled = false;
+                for (const cartItemId in cart) {
+                    const item = cart[cartItemId];
+                    desktopCartItems.appendChild(createCartItemElement(item, cartItemId));
+                    mobileCartItems.appendChild(createCartItemElement(item, cartItemId));
+                    total += item.quantity * item.price;
+                    itemCount += item.quantity;
+                }
+            }
+
+            desktopTotalPriceEl.textContent = `${total} сом`;
+            mobileTotalPriceEl.textContent = `${total} сом`;
+            mobileCartCount.textContent = itemCount;
+            mobileCartCount.classList.toggle('hidden', itemCount === 0);
+        }
+        
+        // --- EVENT HANDLERS & LOGIC ---
+
+        function findProductById(productId) {
+            for (const category in productData) {
+                const product = productData[category].items.find(p => p.id === productId);
+                if (product) return product;
+            }
+            return null;
+        }
+
+        function handleAddToCart(e) {
+            if (!e.target.classList.contains('add-to-cart-btn')) return;
+
+            const productId = parseInt(e.target.dataset.productId);
+            const productCard = e.target.closest('.product-card');
+            const selectedOptionIndex = productCard.querySelector('.size-select').value;
+            const quantity = parseInt(productCard.querySelector('.quantity-input').value);
+
+            const product = findProductById(productId);
+            if (!product || quantity < 1) return;
+
+            const selectedOption = product.options[selectedOptionIndex];
+            const cartItemId = `${productId}-${selectedOptionIndex}`;
+
+            if (cart[cartItemId]) {
+                cart[cartItemId].quantity += quantity;
+            } else {
+                cart[cartItemId] = { name: product.name, weight: selectedOption.weight, price: selectedOption.price, quantity: quantity };
+            }
+            
+            renderCart();
+        }
+
+        function handleRemoveFromCart(e) {
+            if (e.target.classList.contains('remove-from-cart-btn')) {
+                const cartItemId = e.target.dataset.cartItemId;
+                delete cart[cartItemId];
+                renderCart();
+            }
+        }
+        
+        function showOrderModal() {
+            modalOrderSummary.innerHTML = '';
+            let total = 0;
+            for (const cartItemId in cart) {
+                const item = cart[cartItemId];
+                const itemSummaryDiv = document.createElement('div');
+                itemSummaryDiv.className = 'flex justify-between py-2';
+                itemSummaryDiv.innerHTML = `<span>${item.quantity} x ${item.name} (${item.weight})</span><span class="font-medium">${item.quantity * item.price} сом</span>`;
+                modalOrderSummary.appendChild(itemSummaryDiv);
+                total += item.quantity * item.price;
+            }
+            modalTotalPrice.textContent = `${total} сом`;
+            orderModal.classList.remove('hidden');
+            setTimeout(() => orderModal.querySelector('div').classList.remove('scale-95'), 10);
+        }
+        
+        function hideOrderModal() {
+             orderModal.querySelector('div').classList.add('scale-95');
+             setTimeout(() => orderModal.classList.add('hidden'), 300);
+        }
+
+        function openNavMenu() {
+            navOverlay.classList.remove('hidden');
+            navMenu.classList.remove('-translate-x-full');
+        }
+
+        function closeNavMenu() {
+            navOverlay.classList.add('hidden');
+            navMenu.classList.add('-translate-x-full');
+        }
+
+        function openMobileCart() {
+            mobileCartModal.classList.remove('hidden');
+            setTimeout(() => mobileCartModal.querySelector('div').classList.remove('translate-y-full'), 10);
+        }
+        
+        function closeMobileCart() {
+            mobileCartModal.querySelector('div').classList.add('translate-y-full');
+            setTimeout(() => mobileCartModal.classList.add('hidden'), 300);
+        }
+
+        // --- INITIALIZATION ---
+        
+        renderProductsAndNav();
+        renderCart();
+
+        // Event Listeners
+        productsSection.addEventListener('click', handleAddToCart);
+        desktopCartItems.addEventListener('click', handleRemoveFromCart);
+        mobileCartItems.addEventListener('click', handleRemoveFromCart);
+
+        desktopPlaceOrderBtn.addEventListener('click', showOrderModal);
+        mobilePlaceOrderBtn.addEventListener('click', () => {
+            closeMobileCart();
+            showOrderModal();
+        });
+        
+        closeModalBtn.addEventListener('click', hideOrderModal);
+        orderModal.addEventListener('click', (e) => e.target === orderModal && hideOrderModal());
+
+        menuBtn.addEventListener('click', openNavMenu);
+        navOverlay.addEventListener('click', closeNavMenu);
+
+        mobileCartButton.addEventListener('click', openMobileCart);
+        closeMobileCartBtn.addEventListener('click', closeMobileCart);
+
+    </script>
+</body>
+</html>
